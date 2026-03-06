@@ -190,42 +190,10 @@ exports.sendWhatsAppNotification = async (
       body: message,
     };
 
-    // Validate mediaUrl: Twilio requires publicly reachable HTTPS URLs
-    const isValidMedia = async (url) => {
-      try {
-        if (!url) return false;
-        if (Array.isArray(url)) url = url[0];
-        // must be https
-        if (!/^https:\/\//i.test(url)) return false;
-
-        return await new Promise((resolve) => {
-          const lib = url.startsWith('https://') ? https : http;
-          const req = lib.request(url, { method: 'HEAD', timeout: 5000 }, (res) => {
-            const ct = (res.headers['content-type'] || '').toLowerCase();
-            // Accept pdf or generic binary
-            if (res.statusCode >= 200 && res.statusCode < 400 && (ct.includes('pdf') || ct.includes('application/octet-stream') || ct === '')) {
-              resolve(true);
-            } else {
-              resolve(false);
-            }
-          });
-          req.on('error', () => resolve(false));
-          req.on('timeout', () => { req.destroy(); resolve(false); });
-          req.end();
-        });
-      } catch (e) {
-        return false;
-      }
-    };
-
+    // Attach mediaUrl directly if provided (Twilio will fetch it).
+    // Validation is skipped to avoid blocking local URLs during development.
     if (mediaUrl) {
-      const ok = await isValidMedia(mediaUrl);
-      if (ok) {
-        payload.mediaUrl = Array.isArray(mediaUrl) ? mediaUrl : [mediaUrl];
-      } else {
-        console.warn('Provided mediaUrl is not a valid HTTPS-accessible PDF. Skipping media attachment.');
-        console.warn('Twilio requires a publicly reachable HTTPS URL (use ngrok or host on HTTPS). Provided:', mediaUrl);
-      }
+      payload.mediaUrl = Array.isArray(mediaUrl) ? mediaUrl : [mediaUrl];
     }
 
     const client = getTwilioClient();

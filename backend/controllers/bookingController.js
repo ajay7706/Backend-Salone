@@ -40,6 +40,38 @@ exports.createBooking = async (req, res) => {
     });
 
     await booking.save();
+
+    // try to generate receipt and notify user immediately
+    try {
+      const pdfResult = await pdfService.generateReceiptPDF(booking, req.user);
+      const pdfPath = pdfResult.filePath || pdfResult;
+      const pdfPublicUrl = pdfResult.publicUrl || null;
+
+      // email
+      await notificationService.sendBookingConfirmationEmail(
+        req.user.email,
+        req.user.name,
+        booking,
+        pdfPath
+      );
+      // whatsapp (may not reach when developing locally)
+      await notificationService.sendWhatsAppNotification(
+        req.user.phone,
+        req.user.name,
+        booking,
+        true,
+        pdfPublicUrl
+      );
+
+      booking.emailSent = true;
+      booking.whatsappSent = true;
+      booking.pdfSentAt = new Date();
+      await booking.save();
+    } catch (notifyErr) {
+      console.error("Error generating receipt or sending notifications:", notifyErr.message || notifyErr);
+      // don't fail the original request, user booking is created regardless
+    }
+
     res.status(201).json({ message: "Booking created successfully", booking });
   } catch (err) {
     console.error(err);
