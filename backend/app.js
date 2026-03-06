@@ -41,7 +41,7 @@ const { authenticate, requireAdmin } = require("./middleware/authMiddleware");
 const allowedOrigins = [
   'http://localhost:5174', // Local development
   'http://localhost:3000', // Alternative local port
-  'https://gilded-appointments.vercel.app', // Production frontend
+  'https://backend-salone.vercel.app/', // Production frontend
   process.env.FRONTEND_URL, // Dynamic frontend URL from env
 ];
 
