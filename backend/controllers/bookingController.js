@@ -4,6 +4,8 @@ const Rating = require("../models/Rating");
 const Service = require("../models/Service");
 const pdfService = require("../services/pdfService");
 const notificationService = require("../services/notificationService");
+const cloudinaryService = require("../services/cloudinaryService");
+const fs = require("fs");
 
 // create a new booking
 exports.createBooking = async (req, res) => {
@@ -263,12 +265,37 @@ exports.completeBooking = async (req, res) => {
     booking.completedAt = new Date();
     await booking.save();
 
-    // Send completion notification asking for rating
+    // upload receipt PDF to Cloudinary if available and store URL
+    try {
+      const receiptPath = pdfService.getReceiptPath(booking._id);
+      if (fs.existsSync(receiptPath)) {
+        const uploadedUrl = await cloudinaryService.uploadPDF(receiptPath);
+        booking.receiptUrl = uploadedUrl;
+        await booking.save();
+      }
+    } catch (uploadErr) {
+      console.error("Error uploading receipt to Cloudinary:", uploadErr.message || uploadErr);
+      // non-fatal
+    }
+
+    // Send completion notification asking for rating (include receipt link if uploaded)
     await notificationService.sendCompletionNotification(
       booking.userId.email,
       booking.userId.name,
-      booking
+      booking,
+      booking.receiptUrl || null
     );
+
+    // optionally send whatsapp again with completed message and receipt link
+    if (booking.receiptUrl) {
+      await notificationService.sendWhatsAppNotification(
+        booking.userId.phone,
+        booking.userId.name,
+        booking,
+        true,
+        booking.receiptUrl
+      );
+    }
 
     res.json({
       message: "Booking marked as completed",

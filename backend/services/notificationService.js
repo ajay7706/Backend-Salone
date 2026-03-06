@@ -216,8 +216,18 @@ exports.sendWhatsAppNotification = async (
 /**
  * Send completion notification
  */
-exports.sendCompletionNotification = async (userEmail, userName, booking) => {
+exports.sendCompletionNotification = async (userEmail, userName, booking, receiptUrl = null) => {
   try {
+    let receiptSection = "";
+    if (receiptUrl) {
+      receiptSection = `
+        <div style="background: white; padding: 15px; border-left: 4px solid #1e40af; margin: 20px 0;">
+          <h3 style="color: #1e40af; margin-top: 0;">Your Receipt</h3>
+          <p>You can download your receipt <a href="${receiptUrl}">here</a>.</p>
+        </div>
+      `;
+    }
+
     const mailOptions = {
       from: process.env.EMAIL_FROM || "noreply@luxesalon.com",
       to: userEmail,
@@ -233,6 +243,8 @@ exports.sendCompletionNotification = async (userEmail, userName, booking) => {
             <h2 style="color: #1e40af; margin-top: 0;">Hello ${userName}! 😊</h2>
             <p>Thank you for choosing Luxe Salon for your appointment!</p>
             
+            ${receiptSection}
+
             <div style="background: white; padding: 15px; border-left: 4px solid #1e40af; margin: 20px 0;">
               <h3 style="color: #1e40af; margin-top: 0;">How was your experience?</h3>
               <p>We'd love to hear from you! Please rate your appointment and share your feedback.</p>

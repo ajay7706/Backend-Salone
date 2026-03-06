@@ -15,6 +15,8 @@ const bookingSchema = new mongoose.Schema({
   pdfSentAt: { type: Date },
   emailSent: { type: Boolean, default: false },
   whatsappSent: { type: Boolean, default: false },
+  // URL returned from Cloudinary after uploading the PDF
+  receiptUrl: { type: String },
   notes: { type: String },
 }, { timestamps: true });
 
