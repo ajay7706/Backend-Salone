@@ -35,7 +35,7 @@ export async function request(path: string, options: RequestOptions = {}) {
 
   let res;
   try {
-    res = await fetch(url, { ...options, headers, timeout: 15000 });
+    res = await fetch(url, { ...options, headers });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[API Error] Network error:", msg);
