@@ -154,7 +154,7 @@ if (!process.env.JWT_SECRET) {
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
-// app.use("/api/bookings", require("./routes/bookingRoutes"));
+app.use("/api/bookings", require("./routes/bookingRoutes"));
 // services (public + admin + rating endpoints)
 app.use("/api/services", require("./routes/serviceRoutes"));
 // 
