@@ -3,12 +3,36 @@ const twilio = require("twilio");
 const fs = require("fs");
 
 // Email configuration
+// nodemailer will connect to Gmail's SMTP servers. In some hosting
+// environments (Render, Heroku, etc.) outgoing connections on the
+// default SMTPS ports can be blocked, which results in ETIMEDOUT.  If
+// you keep having timeouts you should switch to a third‑party API
+// provider (SendGrid, Mailgun, etc.) or open a support ticket with your
+// host.  Be sure that the credentials are correct and that the app
+// password has no stray spaces (Gmail app passwords are 16 characters
+// with no spaces).
+
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // use TLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+// verify connection configuration when the module is loaded so that
+// any misconfiguration surfaces immediately instead of during sendMail
+transporter.verify((err, success) => {
+  if (err) {
+    console.error("✗ SMTP configuration error:", err.message);
+  } else {
+    console.log("✓ SMTP server is ready to take messages");
+  }
 });
 
 // Twilio client is lazily initialized below to avoid module-load errors when
