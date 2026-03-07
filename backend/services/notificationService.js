@@ -1,39 +1,9 @@
-const nodemailer = require("nodemailer");
+const { sendEmail } = require("./emailService");
 const twilio = require("twilio");
 const fs = require("fs");
 
-// Email configuration
-// nodemailer will connect to Gmail's SMTP servers. In some hosting
-// environments (Render, Heroku, etc.) outgoing connections on the
-// default SMTPS ports can be blocked, which results in ETIMEDOUT.  If
-// you keep having timeouts you should switch to a third‑party API
-// provider (SendGrid, Mailgun, etc.) or open a support ticket with your
-// host.  Be sure that the credentials are correct and that the app
-// password has no stray spaces (Gmail app passwords are 16 characters
-// with no spaces).
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // use TLS
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-// verify connection configuration when the module is loaded so that
-// any misconfiguration surfaces immediately instead of during sendMail
-transporter.verify((err, success) => {
-  if (err) {
-    console.error("✗ SMTP configuration error:", err.message);
-  } else {
-    console.log("✓ SMTP server is ready to take messages");
-  }
-});
+// The SMTP transporter was removed in favor of SendGrid API.  See
+// services/emailService.js for details.
 
 // Twilio client is lazily initialized below to avoid module-load errors when
 // TWILIO credentials are not provided during local import/time.
@@ -61,7 +31,6 @@ exports.sendBookingConfirmationEmail = async (
 ) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_FROM || "noreply@luxesalon.com",
       to: userEmail,
       subject: "Booking Confirmation - Your Appointment is Approved ✓",
       html: `
@@ -106,7 +75,7 @@ exports.sendBookingConfirmationEmail = async (
       ],
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendEmail(mailOptions);
     console.log("✓ Confirmation email sent to:", userEmail);
     return true;
   } catch (error) {
@@ -156,7 +125,7 @@ exports.sendRejectionEmail = async (
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendEmail(mailOptions);
     console.log("✓ Rejection email sent to:", userEmail);
     return true;
   } catch (error) {
