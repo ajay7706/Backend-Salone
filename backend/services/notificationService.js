@@ -1,6 +1,7 @@
 const { sendEmail } = require("./emailService");
 const twilio = require("twilio");
 const fs = require("fs");
+const path = require("path");
 
 // The SMTP transporter was removed in favor of SendGrid API.  See
 // services/emailService.js for details.
@@ -184,9 +185,23 @@ exports.sendWhatsAppNotification = async (
     };
 
     // Attach mediaUrl directly if provided (Twilio will fetch it).
-    // Validation is skipped to avoid blocking local URLs during development.
+    // Twilio requires a public HTTPS URL; it cannot use local file paths.
+    // If caller passed a local path (e.g. "./receipts/receipt-123.pdf"), convert
+    // it into a publicly reachable URL using the BASE_URL environment variable.
     if (mediaUrl) {
-      payload.mediaUrl = Array.isArray(mediaUrl) ? mediaUrl : [mediaUrl];
+      let finalUrl = mediaUrl;
+      // convert array to single value for normalization logic below
+      if (Array.isArray(finalUrl)) {
+        finalUrl = finalUrl[0];
+      }
+      // if the provided url does not look like http(s) then treat as local file
+      if (!/^https?:\/\//i.test(finalUrl)) {
+        const base = (process.env.BASE_URL || process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 5000}`)
+          .replace(/\/$/, "");
+        const fileName = path.basename(finalUrl);
+        finalUrl = `${base}/receipts/${fileName}`;
+      }
+      payload.mediaUrl = Array.isArray(mediaUrl) ? [finalUrl] : [finalUrl];
     }
 
     const client = getTwilioClient();

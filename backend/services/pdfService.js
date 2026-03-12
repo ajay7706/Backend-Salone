@@ -130,8 +130,13 @@ exports.generateReceiptPDF = (booking, user) => {
 
       writeStream.on('finish', () => {
         // Construct public URL for the saved receipt
-        const base = process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
-        const publicUrl = `${base.replace(/\/$/, '')}/receipts/${fileName}`;
+        // prefer a generic BASE_URL but fall back to older APP_BASE_URL for
+        // backwards compatibility.  ensure there is no trailing slash.
+        const base =
+          (process.env.BASE_URL || process.env.APP_BASE_URL ||
+            `http://localhost:${process.env.PORT || 5000}`)
+            .replace(/\/$/, "");
+        const publicUrl = `${base}/receipts/${fileName}`;
         resolve({ filePath, publicUrl });
       });
 
