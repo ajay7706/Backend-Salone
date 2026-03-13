@@ -266,7 +266,7 @@ exports.sendCompletionNotification = async (userEmail, userName, booking, receip
       `,
     };
 
-    await sendMail(mailOptions);
+    await sendEmail(mailOptions);
     console.log("✓ Completion email sent to:", userEmail);
     return true;
   } catch (error) {
