@@ -150,20 +150,21 @@ exports.sendWhatsAppNotification = async (
       ? `Hi ${userName}! 🎉\n\nYour appointment at Luxe Salon is confirmed!\n\n📅 Date: ${bookingDetails.date}\n⏰ Time: ${bookingDetails.time}\n✄️ Service: ${bookingDetails.serviceName}\n💰 Cost: Rs. ${bookingDetails.servicePrice}\n\nPlease arrive 5 minutes early. See you soon! ✨`
       : `Hi ${userName}!\n\nWe regret to inform you that your requested appointment time is not available.\n\nPlease visit our website to reschedule: https://yourdomain.com\n\nThank you!`;
 
-    // Helper to normalize numbers and accept values with or without 'whatsapp:' prefix
     const normalizeNumber = (raw) => {
-      if (!raw) return null;
-      let s = String(raw).trim();
-      // strip whatsapp: prefix if present
-      if (s.toLowerCase().startsWith("whatsapp:")) s = s.replace(/^whatsapp:/i, "");
-      // remove spaces
-      s = s.replace(/\s+/g, "");
-      // ensure it starts with +; if not, prefix + (assumes user provided full national number)
-      if (!s.startsWith("+")) {
-        s = `+${s}`;
-      }
-      return s;
-    };
+if (!raw) return null;
+
+let num = String(raw).replace(/\D/g, "");
+
+if (num.startsWith("0")) {
+num = num.substring(1);
+}
+
+if (!num.startsWith("91")) {
+num = "91" + num;
+}
+
+return "+" + num;
+};
 
     const senderRaw = process.env.TWILIO_WHATSAPP_NUMBER || "";
     const sender = normalizeNumber(senderRaw);
@@ -265,7 +266,7 @@ exports.sendCompletionNotification = async (userEmail, userName, booking, receip
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendMail(mailOptions);
     console.log("✓ Completion email sent to:", userEmail);
     return true;
   } catch (error) {
